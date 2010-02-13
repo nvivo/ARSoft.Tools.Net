@@ -22,6 +22,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -31,6 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <DocumentationFile>..\..\bin\Release\ARSoft.Tools.Net\ARSoft.Tools.Net.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -60,12 +63,17 @@
     <Compile Include="Dns\DnsRecord\MxRecord.cs" />
     <Compile Include="Dns\DnsRecord\NaptrRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\EDns\EDnsOptionBase.cs" />
+    <Compile Include="Dns\EDns\EDnsOptionType.cs" />
+    <Compile Include="Dns\EDns\NsIdOption.cs" />
+    <Compile Include="Dns\EDns\OptRecord.cs" />
     <Compile Include="Dns\DnsRecord\PtrRecord.cs" />
     <Compile Include="Dns\DnsRecord\SoaRecord.cs" />
     <Compile Include="Dns\DnsRecord\SpfRecord.cs" />
     <Compile Include="Dns\DnsRecord\SrvRecord.cs" />
     <Compile Include="Dns\DnsRecord\TxtRecord.cs" />
     <Compile Include="Dns\DnsRecord\UnknownRecord.cs" />
+    <Compile Include="Dns\EDns\UnknownOption.cs" />
     <Compile Include="Dns\OperationCode.cs" />
     <Compile Include="Dns\RecordClass.cs" />
     <Compile Include="Dns\RecordType.cs" />

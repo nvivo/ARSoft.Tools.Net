@@ -9,9 +9,16 @@ namespace ARSoft.Tools.Net.Dns
 	public class DnsMessage
 	{
 		#region Header
+		/// <summary>
+		/// Gets or sets the transaction identifier (ID) of the message
+		/// </summary>
 		public ushort TransactionID { get; set; }
+
 		private ushort Flags;
 
+		/// <summary>
+		/// Gets or sets the query (QR) flag
+		/// </summary>
 		public bool IsQuery
 		{
 			get
@@ -31,6 +38,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the Operation Code (OPCODE)
+		/// </summary>
 		public OperationCode OperationCode
 		{
 			get
@@ -44,6 +54,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the autoritive answer (AA) flag
+		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
 			get
@@ -63,6 +76,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the truncated (TC) flag
+		/// </summary>
 		public bool IsTruncated
 		{
 			get
@@ -82,6 +98,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the recursion desired (RD) flag
+		/// </summary>
 		public bool IsRecursionDesired
 		{
 			get
@@ -101,6 +120,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the recursion allowed (RA) flag
+		/// </summary>
 		public bool IsRecursionAllowed
 		{
 			get
@@ -120,6 +142,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the authentic data (AD) flag
+		/// </summary>
 		public bool IsAuthenticData
 		{
 			get
@@ -139,6 +164,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the checking disabled (CD) flag
+		/// </summary>
 		public bool IsCheckingDisabled
 		{
 			get
@@ -157,33 +185,201 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 		}
-		
+
+		/// <summary>
+		/// Gets or sets the return code (RCODE)
+		/// </summary>
 		public ReturnCode ReturnCode
 		{
 			get
 			{
-				return (ReturnCode)(Flags & (ushort)0x000f);
+				ReturnCode rcode = (ReturnCode)(Flags & (ushort)0x000f);
+
+				OptRecord ednsOptions = EDnsOptions;
+				if (ednsOptions == null)
+				{
+					return rcode;
+				}
+				else
+				{
+					return (rcode | ednsOptions.ExtendedReturnCode);
+				}
 			}
-			internal set
+			set
 			{
+				OptRecord ednsOptions = EDnsOptions;
+
+				if ((ushort)value > 15)
+				{
+					if (ednsOptions == null)
+					{
+						throw new ArgumentOutOfRangeException("Only ReturnCodes greater than 15 allowed in edns messages");
+					}
+					else
+					{
+						ednsOptions.ExtendedReturnCode = value;
+					}
+				}
+				else
+				{
+					if (ednsOptions != null)
+					{
+						ednsOptions.ExtendedReturnCode = 0;
+					}
+				}
+
 				ushort clearedOp = (ushort)(Flags & (ushort)0xfff0);
-				Flags = (ushort)(clearedOp | (ushort)value);
+				Flags = (ushort)(clearedOp | ((ushort)value & ((ushort)0x0f)));
 			}
 		}
 		#endregion
 
-		public List<DnsQuestion> Questions { get; private set; }
-		public List<DnsRecordBase> AnswerRecords { get; private set; }
-		public List<DnsRecordBase> AuthorityRecords { get; private set; }
-		public List<DnsRecordBase> AdditionalRecords { get; private set; }
-
-		public DnsMessage()
+		private List<DnsQuestion> _questions = new List<DnsQuestion>();
+		/// <summary>
+		/// Gets or sets the entries in the question section
+		/// </summary>
+		public List<DnsQuestion> Questions
 		{
-			Questions = new List<DnsQuestion>();
-			AnswerRecords = new List<DnsRecordBase>();
-			AuthorityRecords = new List<DnsRecordBase>();
-			AdditionalRecords = new List<DnsRecordBase>();
+			get { return _questions; }
+			set { _questions = (value ?? new List<DnsQuestion>()); }
 		}
+
+		private List<DnsRecordBase> _answerRecords = new List<DnsRecordBase>();
+		/// <summary>
+		/// Gets or sets the entries in the answer records section
+		/// </summary>
+		public List<DnsRecordBase> AnswerRecords
+		{
+			get { return _answerRecords; }
+			set { _answerRecords = (value ?? new List<DnsRecordBase>()); }
+		}
+
+		private List<DnsRecordBase> _authorityRecords = new List<DnsRecordBase>();
+		/// <summary>
+		/// Gets or sets the entries in the authority records section
+		/// </summary>
+		public List<DnsRecordBase> AuthorityRecords
+		{
+			get { return _authorityRecords; }
+			set { _authorityRecords = (value ?? new List<DnsRecordBase>()); }
+		}
+
+		private List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
+		/// <summary>
+		/// Gets or sets the entries in the additional records section
+		/// </summary>
+		public List<DnsRecordBase> AdditionalRecords
+		{
+			get { return _additionalRecords; }
+			set { _additionalRecords = (value ?? new List<DnsRecordBase>()); }
+		}
+
+		#region EDNS
+		/// <summary>
+		/// Enables or disables EDNS
+		/// </summary>
+		public bool IsEDnsEnabled
+		{
+			get
+			{
+				if (AdditionalRecords != null)
+				{
+					return AdditionalRecords.Where(Record => (Record.RecordType == RecordType.Opt)).Count() != 0;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			set
+			{
+				if (value && !IsEDnsEnabled)
+				{
+					if (AdditionalRecords == null)
+					{
+						AdditionalRecords = new List<DnsRecordBase>();
+					}
+					AdditionalRecords.Add(new OptRecord());
+				}
+				else if (!value && IsEDnsEnabled)
+				{
+					AdditionalRecords.RemoveAll(Record => (Record.RecordType == RecordType.Opt));
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets or set the OptRecord for the EDNS options
+		/// </summary>
+		public OptRecord EDnsOptions
+		{
+			get
+			{
+				if (AdditionalRecords != null)
+				{
+					return (OptRecord)AdditionalRecords.Find(Record => (Record.RecordType == RecordType.Opt));
+				}
+				else
+				{
+					return null;
+				}
+			}
+			set
+			{
+				if (value == null)
+				{
+					IsEDnsEnabled = false;
+				}
+				else if (IsEDnsEnabled)
+				{
+					int pos = AdditionalRecords.FindIndex(Record => (Record.RecordType == RecordType.Opt));
+					AdditionalRecords[0] = value;
+				}
+				else
+				{
+					if (AdditionalRecords == null)
+					{
+						AdditionalRecords = new List<DnsRecordBase>();
+					}
+					AdditionalRecords.Add(value);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the DNSSEC OK (DO) flag
+		/// </summary>
+		public bool IsDnsSecOk
+		{
+			get
+			{
+				OptRecord ednsOptions = EDnsOptions;
+				if (ednsOptions == null)
+				{
+					return false;
+				}
+				else
+				{
+					return ednsOptions.IsDnsSecOk;
+				}
+			}
+			set
+			{
+				OptRecord ednsOptions = EDnsOptions;
+				if (ednsOptions == null)
+				{
+					if (value)
+					{
+						throw new ArgumentOutOfRangeException("Setting DO flag is allowed in edns messages only");
+					}
+				}
+				else
+				{
+					ednsOptions.IsDnsSecOk = value;
+				}
+			}
+		}
+		#endregion
 
 		#region Parsing
 		internal void Parse(byte[] resultData)
@@ -332,9 +528,35 @@ namespace ARSoft.Tools.Net.Dns
 
 					return;
 				}
+				else if (currentByte == 65)
+				{
+					// binary EDNS label
+					int length = resultData[++currentPosition];
+					if (length == 0)
+						length = 256;
+
+					sb.Append(@"\[x");
+					string suffix = "/" + length + "]";
+
+					do
+					{
+						currentByte = resultData[++currentPosition];
+						if (length < 8)
+						{
+							currentByte &= (byte)(((byte)0xff) >> (8 - length));
+						}
+
+						sb.Append(currentByte.ToString("x2"));
+
+						length = length - 8;
+					} while (length > 0);
+
+					sb.Append(suffix);
+					currentPosition++;
+				}
 				else if (currentByte >= 64)
 				{
-					// EDNS label, not supported yet
+					// undefined EDNS label
 				}
 				else
 				{
