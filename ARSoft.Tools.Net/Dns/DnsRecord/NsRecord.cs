@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Authoritatitve name server record</para> <para>Defined in
+	///                                                    <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                                                  </para>
+	/// </summary>
 	public class NsRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Name of the authoritatitve nameserver for the zone
+		/// </summary>
 		public string NameServer { get; private set; }
 
 		internal NsRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the NsRecord class
+		/// </summary>
+		/// <param name="name"> Domain name of the zone </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="nameServer"> Name of the authoritative name server </param>
 		public NsRecord(string name, int timeToLive, string nameServer)
 			: base(name, RecordType.Ns, RecordClass.INet, timeToLive)
 		{

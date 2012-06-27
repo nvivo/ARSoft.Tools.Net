@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,28 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public class DhcpIRecord : DnsRecordBase
+	/// <summary>
+	///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para> <para>Defined in
+	///                                                                                <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
+	///                                                                              </para>
+	/// </summary>
+	public class DhcidRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Record data
+		/// </summary>
 		public byte[] RecordData { get; private set; }
 
-		internal DhcpIRecord() {}
+		internal DhcidRecord() {}
 
-		public DhcpIRecord(string name, int timeToLive, byte[] recordData)
-			: base(name, RecordType.DhcpI, RecordClass.INet, timeToLive)
+		/// <summary>
+		///   Creates a new instance of the DhcidRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="recordData"> Record data </param>
+		public DhcidRecord(string name, int timeToLive, byte[] recordData)
+			: base(name, RecordType.Dhcid, RecordClass.INet, timeToLive)
 		{
 			RecordData = recordData ?? new byte[] { };
 		}
