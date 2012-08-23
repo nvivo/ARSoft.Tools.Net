@@ -24,17 +24,20 @@ using System.Threading;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	internal class DnsAsyncState : IAsyncResult
+	internal class DnsClientAsyncState<TMessage> : IAsyncResult
+		where TMessage : DnsMessageBase
 	{
-		internal List<IPAddress> Servers;
-		internal int ServerIndex;
+		internal List<DnsClientEndpointInfo> EndpointInfos;
+		internal int EndpointInfoIndex;
+
+		internal TMessage Query;
 		internal byte[] QueryData;
 		internal int QueryLength;
 
 		internal DnsServer.SelectTsigKey TSigKeySelector;
 		internal byte[] TSigOriginalMac;
 
-		internal DnsMessage Response;
+		internal List<TMessage> Responses;
 
 		internal Timer Timer;
 		internal bool TimedOut;
@@ -51,12 +54,13 @@ namespace ARSoft.Tools.Net.Dns
 			set { _timeOutUtcTicks = DateTime.UtcNow.Ticks + value * TimeSpan.TicksPerMillisecond; }
 		}
 
-		internal UdpClient UdpClient;
-		internal IPEndPoint UdpEndpoint;
+		internal System.Net.Sockets.Socket UdpClient;
+		internal EndPoint UdpEndpoint;
+
+		internal byte[] Buffer;
 
 		internal TcpClient TcpClient;
 		internal NetworkStream TcpStream;
-		internal byte[] TcpBuffer;
 		internal int TcpBytesToReceive;
 
 		internal AsyncCallback UserCallback;
@@ -85,13 +89,29 @@ namespace ARSoft.Tools.Net.Dns
 				Timer = null;
 			}
 
-
 			IsCompleted = true;
 			if (_waitHandle != null)
 				_waitHandle.Set();
 
 			if (UserCallback != null)
 				UserCallback(this);
+		}
+
+		public DnsClientAsyncState<TMessage> CreateTcpCloneWithoutCallback()
+		{
+			return
+				new DnsClientAsyncState<TMessage>
+				{
+					EndpointInfos = EndpointInfos,
+					EndpointInfoIndex = EndpointInfoIndex,
+					Query = Query,
+					QueryData = QueryData,
+					QueryLength = QueryLength,
+					TSigKeySelector = TSigKeySelector,
+					TSigOriginalMac = TSigOriginalMac,
+					Responses = Responses,
+					_timeOutUtcTicks = _timeOutUtcTicks
+				};
 		}
 	}
 }
