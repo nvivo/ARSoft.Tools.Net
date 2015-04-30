@@ -1,5 +1,5 @@
-#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+﻿#region Copyright and License
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -17,14 +17,27 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net
 {
-	internal class DnsClientParallelState<TMessage>
-		where TMessage : DnsMessageBase
+	internal static class UdpClientExtensions
 	{
-		internal object Lock = new object();
-		internal IAsyncResult SingleMessageAsyncResult;
-		internal DnsClientParallelAsyncState<TMessage> ParallelMessageAsyncState;
+		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout)
+		{
+			var connectTask = udpClient.ReceiveAsync();
+			var timeoutTask = Task.Delay(timeout);
+
+			await Task.WhenAny(connectTask, timeoutTask);
+
+			if (connectTask.IsCompleted)
+				return connectTask.Result;
+
+			return new UdpReceiveResult();
+		}
 	}
 }
