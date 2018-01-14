@@ -1,3 +1,7 @@
+# Attention
+## ARSoft.Tools.Net is now available from the creator at https://github.com/alexreinert/ARSoft.Tools.Net
+## This repository is no longer required and will no longer be maintained. Thanks!
+
 ARSoft.Tools.Net
 ----------------
 
